@@ -23,7 +23,7 @@ def g_ngram(text, n):
 
 
 
-def g_tf(box):
+def count_words(box):
     dict = {}
     for word in box:
         if word in dict:
@@ -35,14 +35,14 @@ def g_tf(box):
 
 
 
-def tf():
-    text = mecab('data/001.txt')
+def tf(file):
+    text = mecab("data/"+file)
     ngram = g_ngram(text, 1)
-    dict = g_tf(ngram)
-    with codecs.open('tf.txt', 'w', 'utf-8') as fout:
-        for key, value in sorted(dict.items()):
-            value = (float(value)/float(len(dict)))
-            fout.write(key+"\t"+str(value)+"\n")
+    tf_dict = count_words(ngram)
+    for key, value in sorted(tf_dict.items()):
+        tf_dict[key] = (float(value)/float(len(tf_dict)))
+
+    return tf_dict
 
 
 
@@ -53,7 +53,7 @@ def idf():
     for file in files:
         text = mecab('data/'+file)
         ngram = g_ngram(text, 1)
-        tf_dict = g_tf(ngram)
+        tf_dict = count_words(ngram)
         all_list += list(tf_dict.keys())
 
     for word in all_list:
@@ -62,11 +62,45 @@ def idf():
         else:
             idf_dict[word] = 1
 
-    with codecs.open('idf.txt', 'w', 'utf-8') as fout:
-        for key, value in sorted(idf_dict.items()):
-            value = math.log2(float(len(files))/float(value))+1
-            fout.write(key+"\t"+str(value)+"\n")
+    for key, value in sorted(idf_dict.items()):
+        idf_dict[key] = math.log2(float(len(files))/float(value))+1
+
+    return idf_dict
 
 
-tf()
-idf()
+
+def tf_idf(path):
+    files = os.listdir('data')
+    idf_dict = idf()
+    with codecs.open(path, 'w', 'utf-8') as fout:
+        for file in files:
+            tf_dict = tf(file)
+            fout.write(file+"\n")
+            for key, value in sorted(tf_dict.items()):
+                value = value * idf_dict[key]
+                fout.write(key+"\t"+str(value)+"\n")
+
+def index(path):
+    idf_dict = {}
+    inverted_index = {}
+
+    files = os.listdir('data')
+    for file in files:
+        text = mecab('data/'+file)
+        ngram = g_ngram(text, 1)
+        tf_dict = count_words(ngram)
+        for word in tf_dict.keys():
+            if word in inverted_index:
+                inverted_index[word].append(file)
+            else:
+                inverted_index[word] = [file]
+
+    with codecs.open(path, 'w', 'utf-8') as fout:
+        for key, value in sorted(inverted_index.items()):
+            fout.write(key+"\t")
+            for num in value:
+                fout.write(num+"\t")
+            fout.write("\n")
+
+# tf_idf("sample.txt")
+index("inverted_index.csv")

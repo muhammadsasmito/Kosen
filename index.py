@@ -1,3 +1,4 @@
+#coding:utf-8
 import MeCab
 import codecs
 import os
@@ -12,6 +13,8 @@ def mecab(file):
     separated_text = result.split(" ")
 
     return separated_text
+
+
 
 
 
@@ -103,4 +106,4 @@ def index(path):
             fout.write("\n")
 
 # tf_idf("sample.txt")
-index("inverted_index.txt")
+index("inverted_index.csv")
